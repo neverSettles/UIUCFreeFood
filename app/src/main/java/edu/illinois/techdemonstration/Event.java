@@ -62,11 +62,18 @@ public class Event implements Parcelable {
     }
 
     public String getTime() {
-        return Time.substring(Time.indexOf("T") + 1, Time.lastIndexOf("-"));
+        try {
+            return Time.substring(Time.indexOf("T") + 1, Time.lastIndexOf("-"));
+        }
+        catch(Exception e){}
+        return Time;
     }
 
     public String getDate() {
-        return Time.substring(0, Time.indexOf("T"));
+        try {
+            return Time.substring(0, Time.indexOf("T"));
+        } catch(Exception e){}
+        return Time;
     }
 
     @Override

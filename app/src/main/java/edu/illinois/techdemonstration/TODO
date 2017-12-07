@@ -1,0 +1,10 @@
+-Layout for detail activity needs reformatting. - Done!
+-Events need to be sorted by Date / Time - Attempting
+
+Reminders:
+-Add reminders to layout.
+-Store reminder preferences.
+-Notifications need to reflect remindered events
+
+Adding a new event:
+-Need to add functionality of allowing a user to add an event.

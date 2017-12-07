@@ -13,8 +13,12 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
@@ -36,8 +40,9 @@ public class MainActivity extends AppCompatActivity {
         //Loop through all the events in the database and parse them into an event
         eventsList.add(new Event("Party", "Sieble Center", "Cheese and crackers", "867509", "1230 PM"));
         eventsList.add(new Event("Group meeting", "Grainger", "Studying for 173 Examlet", "5435435", "130 PM"));
-        //setupRecyclerViewForLocal(eventsList);
-        setupRecyclerViewForDataBase();
+//        setupRecyclerViewForLocal(eventsList);
+//        setupRecyclerViewForDataBase();
+//        setupRecyclerViewForLocal(getEventsFromDatabase());
         setupNotifications();
     }
 
@@ -89,8 +94,9 @@ public class MainActivity extends AppCompatActivity {
         mRecyclerView = (RecyclerView) findViewById(R.id.activty_recycler_view);
         mDatabase = FirebaseDatabase.getInstance();
         DatabaseReference eventsRef = mDatabase.getReference("eventsNew");
+        Query eventsQuery = eventsRef.orderByChild("last_time_stamp").limitToLast(20);
         FirebaseRecyclerAdapter<Event, EventViewHolder> eventAdapter = new FirebaseRecyclerAdapter<Event, EventViewHolder>
-                (Event.class, R.layout.food_event_list_item, EventViewHolder.class, eventsRef) {
+                (Event.class, R.layout.food_event_list_item, EventViewHolder.class, eventsQuery) {
 
             @Override
             protected void populateViewHolder(EventViewHolder viewHolder,
@@ -105,7 +111,47 @@ public class MainActivity extends AppCompatActivity {
         Log.v("POP", "setupRecyclerViewForDataBaseCalled");
     }
 
+    /**
+     * Helper method to interact with the data base and extract
+     * all of the event objects from the database.
+     * @return List of Events extracted from the datbase.
+     */
+    private ArrayList<Event> getEventsFromDatabase() {
+        final ArrayList<Event> eventsList = new ArrayList<>();
 
+        FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
+        DatabaseReference eventsRef = mDatabase.getReference("eventsNew");
+
+        eventsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            /*
+                This method is called once with the initial value
+                and again whenever data at this location is updated.
+            */
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot eventSnapshot: dataSnapshot.getChildren()) {
+                    String name = (String) eventSnapshot.child("Name").getValue();
+                    String time = (String) eventSnapshot.child("Time").getValue();
+                    String location = (String) eventSnapshot.child("Location").getValue();
+                    String description = (String) eventSnapshot.child("Description").getValue();
+                    String uid = (String) eventSnapshot.child("UID").getValue();
+                    eventsList.add(new Event(name, location, description, uid, time));
+                }
+            }
+
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w("DBREAD", "Failed to read value.", databaseError.toException());
+            }
+        });
+        for (Event e: eventsList){
+            Log.v("eventName", e.getName());
+        }
+        Log.v("eventName", "Done logging events");
+        return eventsList;
+    }
 
     /**
      * This method will eventually be deprecated from the project.
